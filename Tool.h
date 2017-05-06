@@ -1,22 +1,18 @@
 #pragma once
 /************************************************************************/
-/* 交互解析类：*/
+/* 工具类：提供通用的函数方法*/
 /************************************************************************/
 
 #include <string>
 #include <vector>
 
-class Shell
+class Tool
 {
 public:
-	Shell(void);
-	~Shell(void);
+	Tool(void);
+	~Tool(void);
 
-	//read user input and execute
-	bool read(std::string s);
-
-private:
-	//获取字符分割后的输入指令信息
-	std::vector<std::string>* instruck;
+	//字符串分割
+	static void split(std::string& s, std::string& delim, std::vector<std::string>* ret);
 };
 

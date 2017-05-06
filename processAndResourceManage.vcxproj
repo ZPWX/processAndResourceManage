@@ -61,10 +61,16 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="ProcessManage.cpp" />
+    <ClCompile Include="ResourceManage.cpp" />
     <ClCompile Include="Shell.cpp" />
+    <ClCompile Include="Tool.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ProcessManage.h" />
+    <ClInclude Include="ResourceManage.h" />
     <ClInclude Include="Shell.h" />
+    <ClInclude Include="Tool.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

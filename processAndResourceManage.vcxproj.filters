@@ -21,9 +21,27 @@
     <ClCompile Include="Shell.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="Tool.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ProcessManage.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ResourceManage.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Shell.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Tool.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ProcessManage.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ResourceManage.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
