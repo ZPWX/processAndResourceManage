@@ -30,6 +30,21 @@
     <ClCompile Include="ResourceManage.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="MyProcess.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="PCB.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Resource.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ResourceA.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ResourceB.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Shell.h">
@@ -42,6 +57,21 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="ResourceManage.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="MyProcess.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="PCB.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ResourceA.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ResourceB.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

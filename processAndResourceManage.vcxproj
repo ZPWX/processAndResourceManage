@@ -61,13 +61,23 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MyProcess.cpp" />
+    <ClCompile Include="PCB.cpp" />
     <ClCompile Include="ProcessManage.cpp" />
+    <ClCompile Include="Resource.cpp" />
+    <ClCompile Include="ResourceA.cpp" />
+    <ClCompile Include="ResourceB.cpp" />
     <ClCompile Include="ResourceManage.cpp" />
     <ClCompile Include="Shell.cpp" />
     <ClCompile Include="Tool.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="MyProcess.h" />
+    <ClInclude Include="PCB.h" />
     <ClInclude Include="ProcessManage.h" />
+    <ClInclude Include="Resource.h" />
+    <ClInclude Include="ResourceA.h" />
+    <ClInclude Include="ResourceB.h" />
     <ClInclude Include="ResourceManage.h" />
     <ClInclude Include="Shell.h" />
     <ClInclude Include="Tool.h" />

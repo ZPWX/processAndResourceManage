@@ -1,5 +1,8 @@
 #include "Tool.h"
+#include <iostream>
+#include <ctime>
 
+bool Tool::rotate = false;
 
 Tool::Tool(void)
 {
@@ -31,3 +34,18 @@ void Tool::split(std::string& s, std::string& delim,std::vector< std::string >* 
 		ret->push_back(s.substr(last,index-last));  
 	}  
 }  
+
+/************************************************************************/
+/* 用于随机产生新建进程所需的资源数量：*/
+/************************************************************************/
+int Tool::resourceRandom() {
+	if(!rotate) {
+		srand(10);
+		rotate = true;
+	}
+	else {
+		srand(100);
+		rotate = false;
+	}
+	return rand() % 11;
+}
