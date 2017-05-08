@@ -137,7 +137,7 @@ bool ProcessManage::addReadyQueue(PCB* pcb) {
 	}
 	//如果就绪队列不为空，对新加入的进程做一次优先级检查，如果进程优先级高则取代当前运行进程
 	else {
-		if(readyQueue->getProcess()->getPriority() < pcb->getProcess()->getPriority()) {
+		if(readyQueue->getProcess()->getPriority() > pcb->getProcess()->getPriority()) {
 
 			std::cout << ">>当前进程：" << pcb->getProcess()->getName() << " 比当前运行进程 "
 				<< readyQueue->getProcess()->getName() << " 高" << std::endl;
