@@ -8,6 +8,8 @@ PCB::PCB(MyProcess* myProcess)
 {
 	father = NULL;
 	son = NULL;
+	fore = NULL;
+	next = NULL;
 	isReady = false;
 }
 
@@ -28,8 +30,27 @@ PCB* PCB::getFather() {
 	return father;
 }
 
+bool PCB::setFather(PCB* pcb) {
+	father = pcb;
+	return true;
+}
+
 PCB* PCB::getSon() {
 	return son;
+}
+
+bool PCB::setSon(PCB* pcb) {
+	son = pcb;
+	return true;
+}
+
+PCB* PCB::getFore() {
+	return fore;
+}
+
+bool PCB::setFore(PCB* const pcb) {
+	fore = pcb;
+	return true;
 }
 
 PCB* PCB::getNext() {

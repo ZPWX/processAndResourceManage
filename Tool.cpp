@@ -40,11 +40,11 @@ void Tool::split(std::string& s, std::string& delim,std::vector< std::string >* 
 /************************************************************************/
 int Tool::resourceRandom() {
 	if(!rotate) {
-		srand(10);
+		srand((unsigned)time(NULL)+10);
 		rotate = true;
 	}
 	else {
-		srand(100);
+		srand((unsigned)time(NULL)+100);
 		rotate = false;
 	}
 	return rand() % 11;

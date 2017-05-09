@@ -15,6 +15,9 @@ PCB* ProcessManage::readyQueue = NULL;
 PCB* ProcessManage::readyFirst = NULL;
 PCB* ProcessManage::readyLast = NULL;
 
+PCB* ProcessManage::runningProcess = NULL;
+PCB* ProcessManage::initProcess = NULL;
+
 ProcessManage::ProcessManage(void)
 {
 }
@@ -34,9 +37,9 @@ void ProcessManage::init() {
 	pcb->setState(true);                                      //设置状态为就绪
 	pcb->getProcess()->setState(1);                           //设置进程状态为运行
 	queue0 = pcb;
+	initProcess = pcb;
 	std::cout << ">>系统进程 " << queue0->getProcess()->getName() << " 已创建运行" << std::endl;
 	std::cout << ">>系统已启动，请输入相应指令进行操作" << std::endl;
-	std::cout << ">>";
 }
 
 
@@ -46,6 +49,14 @@ void ProcessManage::init() {
 	priority：新建进程优先级*/
 /************************************************************************/
 bool ProcessManage::createProcess(std::string name, int priority) {
+	//首先检查是否重复创建相同名称的进程
+	PCB* isRepeat = NULL;
+	isRepeat = find(name);
+	if(isRepeat != NULL) {
+		std::cout << ">>当前进程名已存在，请重新命名进程名" << std::endl;
+		return false;
+	}
+
 	int rA = -1;
 	int rB = -1;
 
@@ -56,9 +67,18 @@ bool ProcessManage::createProcess(std::string name, int priority) {
 	std::cout << ">>进程： " << name << " 创建成功，优先级为：" << priority 
 		<< " 资源A、B需求量为:" << rA << "、" << rB  << std::endl;
 
-	addReadyQueue(pcb);                                  //新建进程后将其添加入就绪队列
+	//如果当前有运行进程，则此新建进程为此运行进程的子进程，如果没有，则是初始进程的子进程
+	if(runningProcess == NULL) {
+		initProcess->setSon(pcb);
+		pcb->setFather(initProcess);
+	}
+	else {
+		runningProcess->setSon(pcb);
+		pcb->setFather(runningProcess);
+	}
 
-	std::cout << ">>";
+    //新建进程后将其添加入就绪队列
+	addReadyQueue(pcb);
 
 	return true;
 }
@@ -68,10 +88,155 @@ bool ProcessManage::createProcess(std::string name, int priority) {
 	name：删除的进程名*/
 /************************************************************************/
 bool ProcessManage::deleteProcess(std::string name) {
-	std::cout << ">>进程： " << name << " 删除成功" << std::endl;
-	std::cout << ">>";
+	//查看是否存在这个进程
+	PCB* destroyProcess = find(name);
+	if(destroyProcess == NULL) {
+		std::cout << ">>系统中无此进程，请检查输入" << std::endl;
+
+		return true;
+	}
+	else {
+		destroy(destroyProcess);
+		schedule();
+	}
 
 	return true;
+}
+
+/************************************************************************/
+/* 销毁进程，连同其子进程：
+	pcb：销毁的进程*/
+/************************************************************************/
+bool ProcessManage::destroy(PCB* pcb) {
+	//首先查看此进程是否有子进程，如果有子进程，先销毁子进程
+	if(pcb->getSon() != NULL) {
+		destroy(pcb->getSon());
+	}
+
+	//销毁当前进程
+	//去除相应的父子关系
+	PCB* father = pcb->getFather();
+	PCB* son = pcb->getSon();
+	if(father != NULL && son == NULL) {
+		father->setSon(NULL);
+	}
+
+	//去除队列信息
+	std::string name = pcb->getProcess()->getName();
+	//就绪队列寻找
+	PCB* current = readyQueue;
+	while(current != NULL) {
+		if(current->getProcess()->getName() == name) {
+			PCB* fore = current->getFore();
+			PCB* next = current->getNext();
+			//如果当前进程位于队首
+			if(fore == NULL) {
+				readyQueue = next;
+
+				delete(pcb);
+				std::cout << ">>进程： " << name << " 删除成功";
+				std::cout << " 正在运行的进程被删除" << std::endl;
+				return true;
+			}
+			//如果当前进程位于队尾
+			else if(next == NULL) {
+				fore->setSon(next);
+
+				delete(pcb);
+				std::cout << ">>进程： " << name << " 删除成功" << std::endl;
+				return true;
+			}
+			else {
+				fore->setNext(next);
+				next->setFore(fore);
+
+				delete(pcb);
+				std::cout << ">>进程： " << name << " 删除成功" << std::endl;
+				return true;
+			}
+		}
+		else if(current->getNext() != NULL) {
+			current = current->getNext();
+		}
+	}
+
+	//阻塞队列寻找
+	current = blockQueue;
+	while(current != NULL && pcb != NULL) {
+		if(current->getProcess()->getName() == name) {
+			PCB* fore = current->getFore();
+			PCB* next = current->getNext();
+			if(fore == NULL) {
+				blockQueue = next;
+
+				delete(pcb);
+				std::cout << ">>进程： " << name << " 删除成功" << std::endl;
+				return true;
+			}
+			//如果当前进程位于队尾
+			else if(next == NULL) {
+				fore->setSon(next);
+
+				delete(pcb);
+				std::cout << ">>进程： " << name << " 删除成功" << std::endl;
+				return true;
+			}
+			else {
+				fore->setNext(next);
+				next->setFore(fore);
+
+				delete(pcb);
+				std::cout << ">>进程： " << name << " 删除成功" << std::endl;
+				return true;
+			}
+		}
+		else if(current->getNext() != NULL) {
+			current = current->getNext();
+		}
+	}
+
+	return false;
+}
+
+/************************************************************************/
+/* 查找进程：
+	name：所查找的进程名*/
+/************************************************************************/
+PCB* ProcessManage::find(std::string name) {
+	PCB* findProcess = NULL;
+	//先冲就绪队列开始查找
+	findProcess = readyQueue;
+	while(findProcess != NULL) {
+		if(findProcess->getProcess()->getName() == name) {
+			return findProcess;
+		}
+		else {
+			if(findProcess->getNext() != NULL) {
+				findProcess = findProcess->getNext();
+			}
+			else {
+				break;
+			}
+		}
+	}
+
+	//再查找阻塞队列
+	findProcess = blockQueue;
+	while(findProcess != NULL) {
+		if(findProcess->getProcess()->getName() == name) {
+			return findProcess;
+		}
+		else {
+			if(findProcess->getNext() != NULL) {
+				findProcess = findProcess->getNext();
+			}
+			else {
+				break;
+			}
+		}
+	}
+
+	return NULL;
 }
 
 /************************************************************************/
@@ -127,6 +292,7 @@ bool ProcessManage::addReadyQueue(PCB* pcb) {
 			readyQueue = pcb;                         //进入就绪队列
 			readyLast = pcb;                          //同时它也是队尾进程
 			pcb->getProcess()->setState(1);           //设置进程为运行状态
+			runningProcess = pcb;
 
 			std::cout << ">>当前无运行进程，进程分配资源成功，直接运行进程" << std::endl;
 		}
@@ -144,10 +310,12 @@ bool ProcessManage::addReadyQueue(PCB* pcb) {
 
 			if(pcb->applyForResource()) {                        //如果进程的资源申请成功则插队运行
 				PCB* currentProcess = readyQueue;                //获取当前运行进程
+				currentProcess->setFore(pcb);
 				currentProcess->getProcess()->setState(0);       //设置当前运行进程为就绪不运行
 				readyQueue = pcb;                                //将新进程插入队首
 				pcb->setNext(currentProcess);                    //队首进程指向下一个进程（被插队的进程）
 				pcb->getProcess()->setState(1);                  //设置进程为运行状态
+				runningProcess = pcb;
 
 				std::cout << ">>当前进程分配资源成功，直接运行进程" << std::endl;
 			}
@@ -161,6 +329,7 @@ bool ProcessManage::addReadyQueue(PCB* pcb) {
 		else {
 			PCB* lastProcess = readyLast;                        //获取就绪队列最尾部进程
 			lastProcess->setNext(pcb);                           //插入队尾
+			pcb->setFore(lastProcess);
 			readyLast = pcb;                                     //使就绪队列队尾指针指向这个新加入队尾的进程
 
 			std::cout << ">>当前进程：" << pcb->getProcess()->getName() << " 比当前运行进程 "

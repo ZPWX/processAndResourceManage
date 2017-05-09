@@ -18,6 +18,10 @@ public:
 	static bool createProcess(std::string name, int priority);
 	//Delete corresponding process
 	static bool deleteProcess(std::string name);
+	//销毁进程，连同其子进程
+	static bool destroy(PCB* pcb);
+	//查找进程
+	static PCB* find(std::string name);
 	//Look process information
 	static bool listProcess();
 	//Clock interrupt	
@@ -43,5 +47,9 @@ private:
 	static PCB* readyQueue;
 	static PCB* readyFirst;//就绪队列首
 	static PCB* readyLast;//就绪队列尾
+	//当前正在运行的进程
+	static PCB* runningProcess;
+	//初始进程
+	static PCB* initProcess;
 };
 

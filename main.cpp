@@ -11,6 +11,8 @@ int main() {
 	instrucks.push_back("cr firstProcess 2");
 	instrucks.push_back("cr secondProcess 1");
 	instrucks.push_back("cr thirdProcess 1");
+	instrucks.push_back("cr firstProcess 2");
+	instrucks.push_back("de firstProcess");
 
 	int index = 0;
 	std::cout << ">>" << instrucks.at(index) << std::endl;
