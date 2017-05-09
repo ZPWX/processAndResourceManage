@@ -129,9 +129,21 @@ bool ProcessManage::destroy(PCB* pcb) {
 		if(current->getProcess()->getName() == name) {
 			PCB* fore = current->getFore();
 			PCB* next = current->getNext();
-			//如果当前进程位于队首
-			if(fore == NULL) {
+			//如果当前进程位于队首，并且不止一个进程
+			if(fore == NULL && next != NULL) {
 				readyQueue = next;
+				next->setFore(fore);
+				runningProcess = NULL;
+
+				delete(pcb);
+				std::cout << ">>进程： " << name << " 删除成功";
+				std::cout << " 正在运行的进程被删除" << std::endl;
+				return true;
+			}
+			//如果当前进程位于队首，并且只有一个进程
+			else if(fore == NULL && next == NULL) {
+				readyQueue = NULL;
+				runningProcess = NULL;
 
 				delete(pcb);
 				std::cout << ">>进程： " << name << " 删除成功";
@@ -139,14 +151,15 @@ bool ProcessManage::destroy(PCB* pcb) {
 				return true;
 			}
 			//如果当前进程位于队尾
-			else if(next == NULL) {
-				fore->setSon(next);
+			else if(fore != NULL && next == NULL) {
+				fore->setSon(NULL);
 
 				delete(pcb);
 				std::cout << ">>进程： " << name << " 删除成功" << std::endl;
 				return true;
 			}
-			else {
+			//进程位于中间
+			else if(fore != NULL && next != NULL) {
 				fore->setNext(next);
 				next->setFore(fore);
 
@@ -244,6 +257,37 @@ PCB* ProcessManage::find(std::string name) {
 /************************************************************************/
 bool ProcessManage::listProcess() {
 	std::cout << ">>进程列表如下：" << std::endl;
+
+	if(runningProcess == NULL) {
+		std::cout << ">>当前无运行进程" << std::endl;
+	}
+	else {
+		std::cout << ">>当前运行进程为：" << runningProcess->getProcess()->getName() << std::endl;
+	}
+
+	PCB* current = readyQueue;
+	if(current == NULL) {
+		std::cout << ">>就绪队列为空，没有就绪进程" << std::endl;
+	}
+	else {
+		std::cout << ">>就绪队列有如下进程：";
+		while(current != NULL) {
+			std::cout << current->getProcess()->getName() << " " << std::endl;
+			current = current->getNext();
+		}
+	}
+
+	current = blockQueue;
+	if(current == NULL) {
+		std::cout << ">>阻塞队列为空，没有阻塞进程" << std::endl;
+	}
+	else {
+		std::cout << ">>阻塞队列有如下进程：";
+		while(current != NULL) {
+			std::cout << current->getProcess()->getName() << " " << std::endl;
+			current = current->getNext();
+		}
+	}
 
 	return true;
 }
