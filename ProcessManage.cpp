@@ -179,22 +179,33 @@ bool ProcessManage::destroy(PCB* pcb) {
 		if(current->getProcess()->getName() == name) {
 			PCB* fore = current->getFore();
 			PCB* next = current->getNext();
-			if(fore == NULL) {
+			//如果当前进程位于队首，并且不止一个进程
+			if(fore == NULL && next != NULL) {
 				blockQueue = next;
+				next->setFore(fore);
 
 				delete(pcb);
-				std::cout << ">>进程： " << name << " 删除成功" << std::endl;
+				std::cout << ">>进程： " << name << " 删除成功";
+				return true;
+			}
+			//如果当前进程位于队首，并且只有一个进程
+			else if(fore == NULL && next == NULL) {
+				blockQueue = NULL;
+
+				delete(pcb);
+				std::cout << ">>进程： " << name << " 删除成功";
 				return true;
 			}
 			//如果当前进程位于队尾
-			else if(next == NULL) {
-				fore->setSon(next);
+			else if(fore != NULL && next == NULL) {
+				fore->setSon(NULL);
 
 				delete(pcb);
 				std::cout << ">>进程： " << name << " 删除成功" << std::endl;
 				return true;
 			}
-			else {
+			//进程位于中间
+			else if(fore != NULL && next != NULL) {
 				fore->setNext(next);
 				next->setFore(fore);
 
@@ -305,7 +316,72 @@ bool ProcessManage::timeInt() {
 /* 进程调度：*/
 /************************************************************************/
 void ProcessManage::schedule() {
+	//首先检查阻塞队列是否可以获得资源而激活
+	PCB* current = blockQueue;
+	while(current != NULL) {
+		//如果资源充足，进程进入就绪队列
+		if(current->applyForResource()) {
+			addReadyQueue(current);
+			//从阻塞队列中移除
+			std::string name = current->getProcess()->getName();
+			PCB* fore = current->getFore();
+			PCB* next = current->getNext();
+			//如果当前进程位于队首，并且不止一个进程
+			if(fore == NULL && next != NULL) {
+				blockQueue = next;
+				next->setFore(fore);
 
+				std::cout << ">>进程： " << name << "进入就绪队列";
+				return;
+			}
+			//如果当前进程位于队首，并且只有一个进程
+			else if(fore == NULL && next == NULL) {
+				blockQueue = NULL;
+
+				std::cout << ">>进程： " << name << "进入就绪队列";
+				return;
+			}
+			//如果当前进程位于队尾
+			else if(fore != NULL && next == NULL) {
+				fore->setSon(NULL);
+
+				std::cout << ">>进程： " << name << "进入就绪队列" << std::endl;
+				return;
+			}
+			//进程位于中间
+			else if(fore != NULL && next != NULL) {
+				fore->setNext(next);
+				next->setFore(fore);
+
+				std::cout << ">>进程： " << name << "进入就绪队列" << std::endl;
+				return;
+			}
+		}
+
+		current = current->getNext();
+	}
+
+	//检查就绪队列，如果有进程存在，但无运行进程则申请资源
+	if(readyQueue != NULL && runningProcess == NULL) {
+		//对队首进程进行资源申请，如果成功则运行，失败进入阻塞队列
+		while(readyQueue != NULL) {
+			std::string name = readyQueue->getProcess()->getName();
+			if(!readyQueue->applyForResource()) {
+				//加入阻塞队列
+				addBlockQueue(readyQueue);
+				std::string name = readyQueue->getProcess()->getName();
+				std::cout << ">>进程： " << name << "进入阻塞队列" << std::endl;
+
+				readyQueue = readyQueue->getNext();
+			}
+			else {
+				readyQueue->getProcess()->setState(1);
+				runningProcess = readyQueue;
+				std::cout << ">>进程： " << name << "资源申请成功，进入运行状态" << std::endl;
+				return;
+			}
+		}
+	}
 }
 
 void ProcessManage::schedule(PCB* pcb) {

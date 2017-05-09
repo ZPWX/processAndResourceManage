@@ -13,7 +13,7 @@ int main() {
 	instrucks.push_back("list_p");
 	instrucks.push_back("cr firstProcess 2");
 	instrucks.push_back("cr secondProcess 1");
-	instrucks.push_back("de firstProcess");
+	instrucks.push_back("de secondProcess");
 	instrucks.push_back("list_p");
 	//instrucks.push_back("cr thirdProcess 1");
 	//instrucks.push_back("cr firstProcess 2");
@@ -23,6 +23,7 @@ int main() {
 	std::cout << ">>" << instrucks.at(index) << std::endl;
 	while(shell->read(instrucks.at(index)) && index+1 < instrucks.size()) {
 		++index;
+		std::cout << std::endl;
 		std::cout << ">>" << instrucks.at(index) << std::endl;
 	}
 
