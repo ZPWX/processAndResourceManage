@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="MyProcess" Collapsed="true">
+    <Position X="0.5" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QAAAAEAAQAQAACAAAAIAAAAAAAAEAAAEAAAEAAIAAAQ=</HashCode>
+      <FileName>MyProcess.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PCB" Collapsed="true">
+    <Position X="0.5" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QAAIAAQAAQAAIAAAARAAAAABAAAYMAEAIQACAAIAIAU=</HashCode>
+      <FileName>PCB.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ProcessManage" Collapsed="true">
+    <Position X="5.25" Y="3" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QAAAABIAIAAAAAAIMABAAECAAADAAAJiDACAAAACCAA=</HashCode>
+      <FileName>ProcessManage.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Resource" Collapsed="true">
+    <Position X="1.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAIAAAAAAIAAAAAAAAAAACgAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Resource.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ResourceA" Collapsed="true">
+    <Position X="0.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAIAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>ResourceA.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ResourceB" Collapsed="true">
+    <Position X="2.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAIAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>ResourceB.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ResourceManage" Collapsed="true">
+    <Position X="5.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AIAAEAAAAACABCAABAAAkAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>ResourceManage.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Shell" Collapsed="true">
+    <Position X="7" Y="2.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAIAAAAAAASAAAAAIAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Shell.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Tool" Collapsed="true">
+    <Position X="2.75" Y="5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAACAAAAAAAAAAAAQAAAAABAgAAAAABAAAAAAAAA=</HashCode>
+      <FileName>Tool.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="微软雅黑" Size="9" />
+</ClassDiagram>

@@ -1,7 +1,7 @@
 # 进程与资源管理实验
 ****
 ## 一、实验原理
-&ensp;&ensp;&ensp;&ensp;
+&ensp;&ensp;&ensp;&ensp;利用相应的操作系统的进程创建、删除和调度原理，通过编程语言来实现模拟一个操作系统的进程调度
 
 ## 二、实验目的
 &ensp;&ensp;&ensp;&ensp;设计和实现进程与资源管理，并完成Test shell的编写，以建立系统的进程管理、调度、资源管理和分配的知识体系，从而加深对操作系统进程调度和资源管理功能的宏观理解和微观实现技术的掌握。
@@ -217,21 +217,535 @@ bool Shell::read(std::string s) {
     - 进程：pProgress
     - 父进程：pFather
     - 子进程：pSon
+    - 队列中的上一个进程：fore
+    - 队列中的下一个进程：next
     - 资源状态：sourceState
 
-- 进程管理队列 List：
-    - 0优先级：p0
-    - 1优先级：p1
-    - 2优先级：p2
+##### 3.2.2 实现细节：
+###### 进程创建：
+&ensp;&ensp;&ensp;&ensp;创建进程如下：首先要确定新建的进程为重名，然后新建进程，打印相应信息；新建的进程首先进入就绪队列，如果优先级较高，可强占运行时间
+
+```c++
+/************************************************************************/
+/* 创建进程：
+    name：新建进程名
+    priority：新建进程优先级*/
+/************************************************************************/
+bool ProcessManage::createProcess(std::string name, int priority) {
+    //首先检查是否重复创建相同名称的进程
+    PCB* isRepeat = NULL;
+    isRepeat = find(name);
+    if(isRepeat != NULL) {
+        std::cout << ">>当前进程名已存在，请重新命名进程名" << std::endl;
+        return false;
+    }
+
+    int rA = -1;
+    int rB = -1;
+
+    MyProcess* process = new MyProcess(name, priority);
+    process->getResourceNeed(rA, rB);
+    PCB* pcb = new PCB(process);
+
+    std::cout << ">>进程： " << name << " 创建成功，优先级为：" << priority 
+        << " 资源A、B需求量为:" << rA << "、" << rB  << std::endl;
+
+    //父子关系建立
+    //如果当前有运行进程，则此新建进程为此运行进程的子进程，如果没有，则是初始进程的子进程
+    if(runningProcess == NULL) {
+        initProcess->setSon(pcb);
+        pcb->setFather(initProcess);
+    }
+    else {
+        runningProcess->setSon(pcb);
+        pcb->setFather(runningProcess);
+    }
+
+    //新建进程后将其添加入就绪队列
+    addReadyQueue(pcb);
+
+    return true;
+}
+```
+
+###### 删除进程：
+&ensp;&ensp;&ensp;&ensp;删除进程时首先判断系统中是否存在这个进程，并且释放其占用的资源，然后销毁此进程和他的子进程，如果进行一次系统调度
+
+```c++
+/************************************************************************/
+/* 删除进程：
+    name：删除的进程名*/
+/************************************************************************/
+bool ProcessManage::deleteProcess(std::string name) {
+    //查看是否存在这个进程
+    PCB* destroyProcess = find(name);
+    if(destroyProcess == NULL) {
+        std::cout << ">>系统中无此进程，请检查输入" << std::endl;
+
+        return true;
+    }
+    else {
+        destroy(destroyProcess);
+        schedule();
+    }
+
+    return true;
+}
+
+/************************************************************************/
+/* 销毁进程，连同其子进程：
+    pcb：销毁的进程*/
+/************************************************************************/
+bool ProcessManage::destroy(PCB* pcb) {
+    //首先查看此进程是否有子进程，如果有子进程，先销毁子进程
+    if(pcb->getSon() != NULL) {
+        destroy(pcb->getSon());
+    }
+
+    //释放删除进程的资源
+    ResourceManage::releaseResource(pcb);
+
+    //销毁当前进程
+    //去除相应的父子关系
+    PCB* father = pcb->getFather();
+    PCB* son = pcb->getSon();
+    if(father != NULL && son == NULL) {
+        father->setSon(NULL);
+    }
+
+    //去除队列信息
+    std::string name = pcb->getProcess()->getName();
+    //就绪队列寻找
+    PCB* current = readyQueue;
+    while(current != NULL) {
+        if(current->getProcess()->getName() == name) {
+            PCB* fore = current->getFore();
+            PCB* next = current->getNext();
+            //如果当前进程位于队首，并且不止一个进程
+            if(fore == NULL && next != NULL) {
+                readyQueue = next;
+                next->setFore(fore);
+                runningProcess = NULL;
+
+                delete(pcb);
+                std::cout << ">>进程： " << name << " 删除成功";
+                std::cout << " 正在运行的进程被删除" << std::endl;
+                return true;
+            }
+            //如果当前进程位于队首，并且只有一个进程
+            else if(fore == NULL && next == NULL) {
+                readyQueue = NULL;
+                runningProcess = NULL;
+
+                delete(pcb);
+                std::cout << ">>进程： " << name << " 删除成功";
+                std::cout << " 正在运行的进程被删除" << std::endl;
+                return true;
+            }
+            //如果当前进程位于队尾
+            else if(fore != NULL && next == NULL) {
+                fore->setSon(NULL);
+
+                delete(pcb);
+                std::cout << ">>进程： " << name << " 删除成功" << std::endl;
+                return true;
+            }
+            //进程位于中间
+            else if(fore != NULL && next != NULL) {
+                fore->setNext(next);
+                next->setFore(fore);
+
+                delete(pcb);
+                std::cout << ">>进程： " << name << " 删除成功" << std::endl;
+                return true;
+            }
+        }
+
+        current = current->getNext();
+    }
+
+    //阻塞队列寻找
+    current = blockQueue;
+    while(current != NULL && pcb != NULL) {
+        if(current->getProcess()->getName() == name) {
+            PCB* fore = current->getFore();
+            PCB* next = current->getNext();
+            //如果当前进程位于队首，并且不止一个进程
+            if(fore == NULL && next != NULL) {
+                blockQueue = next;
+                next->setFore(fore);
+
+                delete(pcb);
+                std::cout << ">>进程： " << name << " 删除成功" << std::endl;
+                return true;
+            }
+            //如果当前进程位于队首，并且只有一个进程
+            else if(fore == NULL && next == NULL) {
+                blockQueue = NULL;
+
+                delete(pcb);
+                std::cout << ">>进程： " << name << " 删除成功" << std::endl;
+                return true;
+            }
+            //如果当前进程位于队尾
+            else if(fore != NULL && next == NULL) {
+                fore->setSon(NULL);
+
+                delete(pcb);
+                std::cout << ">>进程： " << name << " 删除成功" << std::endl;
+                return true;
+            }
+            //进程位于中间
+            else if(fore != NULL && next != NULL) {
+                fore->setNext(next);
+                next->setFore(fore);
+
+                delete(pcb);
+                std::cout << ">>进程： " << name << " 删除成功" << std::endl;
+                return true;
+            }
+        }
+
+        current = current->getNext();
+    }
+
+    return false;
+}
+```
+
+###### 进程调度：
+&ensp;&ensp;&ensp;&ensp;在进程调度中，首先查找阻塞队列，看是否有足够的空闲资源，如果有空闲的充足资源，则把相应的进程激活，加入就绪队列
+
+```c++
+************************************************************************/
+/* 进程调度：*/
+/************************************************************************/
+void ProcessManage::schedule() {
+    //首先检查阻塞队列是否可以获得资源而激活
+    PCB* current = blockQueue;
+    while(current != NULL) {
+        //如果资源充足，进程进入就绪队列
+        if(current->applyForResource(false)) {
+            //从阻塞队列中移除
+            std::string name = current->getProcess()->getName();
+            PCB* fore = current->getFore();
+            PCB* next = current->getNext();
+            //如果当前进程位于队首，并且不止一个进程
+            if(fore == NULL && next != NULL) {
+                blockQueue = next;
+                next->setFore(fore);
+
+                std::cout << ">>进程： " << name << "进入就绪队列" << std::endl;
+                addReadyQueue(current);
+                return;
+            }
+            //如果当前进程位于队首，并且只有一个进程
+            else if(fore == NULL && next == NULL) {
+                blockQueue = NULL;
+
+                std::cout << ">>进程： " << name << "进入就绪队列" << std::endl;
+                addReadyQueue(current);
+                return;
+            }
+            //如果当前进程位于队尾
+            else if(fore != NULL && next == NULL) {
+                fore->setSon(NULL);
+
+                std::cout << ">>进程： " << name << "进入就绪队列" << std::endl;
+                addReadyQueue(current);
+                return;
+            }
+            //进程位于中间
+            else if(fore != NULL && next != NULL) {
+                fore->setNext(next);
+                next->setFore(fore);
+
+                std::cout << ">>进程： " << name << "进入就绪队列" << std::endl;
+                addReadyQueue(current);
+                return;
+            }
+        }
+
+        current = current->getNext();
+    }
+
+    //检查就绪队列，如果有进程存在，但无运行进程则申请资源
+    if(readyQueue == NULL) {
+        std::cout << ">>无就绪进程，无进程可调度运行" << std::endl;
+    }
+    if(readyQueue != NULL && runningProcess == NULL) {
+        //对队首进程进行检测，如果成功则运行，失败进入阻塞队列
+        std::string name = readyQueue->getProcess()->getName();
+        //如果资源不足则进入阻塞队列
+        if(!readyQueue->getState() && !readyQueue->applyForResource(false)) {
+            //首先从就绪独立移除
+            PCB* current = readyQueue;
+            current->setNext(NULL);
+            readyQueue = current->getNext();
+            if(readyQueue == NULL) {
+                runningProcess = NULL;
+                readyLast = NULL;
+            }
+            else {
+                readyQueue->setFore(NULL);
+            }
+            //加入阻塞队列
+            addBlockQueue(current);
+            std::string name = readyQueue->getProcess()->getName();
+            std::cout << ">>进程： " << name << "进入阻塞队列" << std::endl;
+
+            //无运行进程，再调度进程调度，查看就绪队列下一个进程
+            schedule();
+        }
+        else {
+            readyQueue->getProcess()->setState(1);
+            runningProcess = readyQueue;
+            //如果是第一次申请资源成功，则设置成功占用资源
+            if(!readyQueue->getState()) {
+                readyQueue->setState(true);
+            }
+            std::cout << ">>进程： " << name << "资源申请成功，进入运行状态" << std::endl;
+            return;
+        }
+    }
+}
+```
+
+###### 时钟中断：
+&ensp;&ensp;&ensp;&ensp;时钟中断时暂停当前运行的进程，并将当前运行的进程加入到就绪队列的尾部，但不释放其占有的资源。然后进行进程调度
+
+```c++
+/************************************************************************/
+/* 时钟中断：*/
+/************************************************************************/
+bool ProcessManage::timeInt() {
+    if(runningProcess == NULL) {
+        std::cout << ">>当前无运行进程，不需时钟中断" << std::endl;
+        return false;
+    }
+
+    std::cout << ">>进程：" << runningProcess->getProcess()->getName() << " 时钟中断" << std::endl;
+    //如果就绪进程就只有一个，只设置不是运行状态就可
+    if(readyQueue->getNext() == NULL) {
+        runningProcess->getProcess()->setState(0);
+    }
+    //否则将运行进程停止，并插入就绪队列最后方
+    else {
+        //设置状态
+        runningProcess->getProcess()->setState(0);
+        //从队列中移除
+        readyQueue = runningProcess->getNext();
+        runningProcess->getNext()->setFore(NULL);
+        //插入队尾
+        PCB* current = runningProcess;
+        readyLast->setNext(current);
+        current->setFore(readyLast);
+        current->setNext(NULL);
+        readyLast = current;
+    }
+
+    runningProcess = NULL;
+    schedule();
+
+    return true;
+}
+```
+
+###### 查看进程信息：
+&ensp;&ensp;&ensp;&ensp;打印出现系统的相关进程信息
+
+```c++
+/************************************************************************/
+/* 查看进程列表：*/
+/************************************************************************/
+bool ProcessManage::listProcess() {
+    std::cout << ">>进程列表如下：" << std::endl;
+
+    if(runningProcess == NULL) {
+        std::cout << ">>当前无运行进程" << std::endl;
+    }
+    else {
+        std::cout << ">>当前运行进程为：" << runningProcess->getProcess()->getName() << std::endl;
+    }
+
+    PCB* current = readyQueue;
+    if(current == NULL) {
+        std::cout << ">>就绪队列为空，没有就绪进程" << std::endl;
+    }
+    else {
+        std::cout << ">>就绪队列有如下进程：";
+        while(current != NULL) {
+            std::cout << current->getProcess()->getName() << " ";
+            current = current->getNext();
+        }
+        std::cout << std::endl;
+    }
+
+    current = blockQueue;
+    if(current == NULL) {
+        std::cout << ">>阻塞队列为空，没有阻塞进程" << std::endl;
+    }
+    else {
+        std::cout << ">>阻塞队列有如下进程：";
+        while(current != NULL) {
+            std::cout << current->getProcess()->getName() << " ";
+            current = current->getNext();
+        }
+        std::cout << std::endl;
+    }
+
+    return true;
+}
+```
 
 #### 3.3 资源模块：
 ##### 3.3.1 模块类：
-- 资源 resource：
-    - 资源名：ID
-    - 资源总量：amount
-    - 资源剩余量：remain
-    - 占用情况链表：pOccupyList
+- 资源管理类 ResourceManage：
+    - 资源A：resourceA
+    - 资源B：resourceB
+    - 资源A的剩余数量：remainA
+    - 资源B的剩余数量：remainB
+    - 资源申请：requestResource（）
+    - 具体进程资源申请：apply（）
+    - 资源释放：releaseResource（）
+    - 资源情况查看：listResource（）
+
+- 资源类 Resource：基类
+    - 资源总数量：amount
+
+- 资源A ResourceA：继承资源类
+
+- 资源B ResourceB：基础资源类
+
+##### 3.3.2 实现细节：
+###### 资源申请：
+&ensp;&ensp;&ensp;&ensp;根据系统的进程的资源要求进行资源的申请，资源申请有两种形式，一个是只查看系统中是否有相应的充足的资源，资源的数量不做相应的变化；另一种是判断是否有相应的资源，并获取，相应的资源数量做相应的变化
+
+```c++
+/************************************************************************/
+/* 申请系统资源：
+/************************************************************************/
+bool ResourceManage::requestResource() {
+    //std::cout << ">>申请资源：" << name << std::endl;
+    ProcessManage::schedule();
+
+    return true;
+}
+
+/************************************************************************/
+/* 进程资源申请，申请成功则资源数量进行相应的变化:
+    countA:资源A的申请数量
+    countB:资源B的申请数量
+    isGet:是否是资源数量进行相应的变化*/
+/************************************************************************/
+bool ResourceManage::apply(const int& countA, const int& countB, bool isGet) {
+    if(countA <= remainA && countB <= remainB) {
+        if(isGet) {
+            remainA -= countA;
+            remainB -= countB;
+        }
+        return true;
+    }
+
+    return false;
+}
+```
+
+###### 释放资源：
+&ensp;&ensp;&ensp;&ensp;释放资源有两种调用形式，一种是无参数调用，此调用默认释放当前运行进程的资源（视此进程已运行完成）；另一种是指定相应的进程并释放其占有的资源
+
+```c++
+/************************************************************************/
+/* 释放对应资源：
+/************************************************************************/
+bool ResourceManage::releaseResource() {
+    //获取当前运行进程的资源数目,并释放
+    int runA = -1;
+    int runB = -1;
+    ProcessManage::getRunningResource(runA, runB);
+    remainA += runA;
+    remainB += runB;
+
+    //重新调度进程
+    ProcessManage::schedule();
+
+    return true;
+}
+
+/************************************************************************/
+/* 释放对应资源：
+    pcb:要释放资源的进程*/
+/************************************************************************/
+bool ResourceManage::releaseResource(PCB* pcb) {
+    //检测此进程是否有占用资源,没有资源占用直接返回
+    if(!pcb->getState()) {
+        return false;
+    }
+
+    //获取当前运行进程的资源数目,并释放
+    int runA = -1;
+    int runB = -1;
+    pcb->getProcess()->getResourceNeed(runA, runB);
+    remainA += runA;
+    remainB += runB;
+
+    std::cout << ">>进程 " << pcb->getProcess()->getName() << " 资源释放成功" << std::endl;
+
+    return true;
+}
+```
+
+###### 查看资源信息：
+&ensp;&ensp;&ensp;&ensp;打印显示系统中相关的资源信息：
+
+```c++
+/************************************************************************/
+/* 查看系统资源信息：*/
+/************************************************************************/
+bool ResourceManage::listResource() {
+    std::cout << ">>系统资源信息如下：" << std::endl;
+    std::cout << "ResourceA:amount=" << resourceA->getAmount() << " remain=" << remainA << std::endl;
+    std::cout << "ResourceB:amount=" << resourceB->getAmount() << " remain=" << remainB << std::endl;
+
+    return true;
+}
+```
 
 ### 4.测试
+#### 4.1 测试输入如下：
+- cr firstProcess 2
+- list_r
+- cr secondProcess 1
+- list_r
+- list_p
+- de firstProcess
+- list_p
+- list_r
+- cr firstProcess 2
+- cr secondProcess 1
+- list_r
+- list_p
+- to
+- list_r
+- list_p
+- cr P3 2
+- cr P4 2
+- list_r
+- list_p
+- rel
+- list_r
+- list_p
+- cr P5 1
+- cr P6 1
+- list_r
+- list_p
+
+#### 4.1 测试结果如下：
+
+![](./result1.jpg)
+
+![](./result2.jpg)
+
+![](./result3.jpg)
 
 ## 六、实验总结

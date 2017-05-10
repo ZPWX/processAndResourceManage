@@ -15,8 +15,6 @@ public:
 
 	//Apply for resource
 	static bool requestResource();
-	static bool requestResource(std::string name);
-	static bool requestResource(std::string name, int count);
 	static bool apply(const int& countA, const int& countB, bool isGet);
 	//Release resource
 	static bool releaseResource();

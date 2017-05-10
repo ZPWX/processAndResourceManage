@@ -31,19 +31,6 @@ bool ResourceManage::requestResource() {
 	return true;
 }
 
-bool ResourceManage::requestResource(std::string name) {
-	//std::cout << ">>申请资源：" << name << std::endl;
-	ProcessManage::schedule();
-
-	return true;
-}
-
-bool ResourceManage::requestResource(std::string name, int count) {
-	std::cout << ">>申请资源：" << name << "," << count << "个" << std::endl;
-
-	return true;
-}
-
 /************************************************************************/
 /* 进程资源申请，申请成功则资源数量进行相应的变化:
 	countA:资源A的申请数量

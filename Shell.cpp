@@ -74,7 +74,7 @@ bool Shell::read(std::string s) {
 		else {
 			std::string name = instruck->at(1);
 			int count = atoi(instruck->at(2).c_str());
-			ResourceManage::requestResource(name, count);
+			ResourceManage::requestResource();
 		}
 	}
 	//สอทลืสิด
