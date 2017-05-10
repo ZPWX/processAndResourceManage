@@ -2,6 +2,7 @@
 
 
 ResourceB::ResourceB(void)
+	:Resource(15)
 {
 }
 

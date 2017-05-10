@@ -79,14 +79,13 @@ bool Shell::read(std::string s) {
 	}
 	//释放资源
 	else if(command == "rel") {
-		//判断参数是否为一个：资源名
-		if(instruck->size() != 2) {
-			std::cout << ">>释放需提供资源名，请检查输入参数" << std::endl;
+		//判断参数是否没有
+		if(instruck->size() != 1) {
+			std::cout << ">>请检查输入，help查看指令输入帮助" << std::endl;
 			std::cout << ">>";
 		}
 		else {
-			std::string name = instruck->at(1);
-			ResourceManage::releaseResource(name);
+			ResourceManage::releaseResource();
 		}
 	}
 	//时钟中断

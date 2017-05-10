@@ -11,7 +11,7 @@ public:
 	~PCB(void);
 
 	//申请进程所需资源
-	bool applyForResource();
+	bool applyForResource(bool isGet);
 
 	MyProcess* getProcess();
 	PCB* getFather();

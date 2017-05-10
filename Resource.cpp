@@ -1,11 +1,16 @@
 #include "Resource.h"
 
 
-Resource::Resource(void)
+Resource::Resource(const int& amount)
+	:amount(amount)
 {
 }
 
 
 Resource::~Resource(void)
 {
+}
+
+int Resource::getAmount() {
+	return amount;
 }

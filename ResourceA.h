@@ -6,5 +6,6 @@ class ResourceA :
 public:
 	ResourceA(void);
 	~ResourceA(void);
+
 };
 

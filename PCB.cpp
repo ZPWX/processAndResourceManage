@@ -1,6 +1,7 @@
 #include "PCB.h"
 #include <iostream>
 #include "MyProcess.h"
+#include "ResourceManage.h"
 
 
 PCB::PCB(MyProcess* myProcess)
@@ -18,8 +19,21 @@ PCB::~PCB(void)
 {
 }
 
-bool PCB::applyForResource() {
-	return true;
+/************************************************************************/
+/* 申请资源：
+	isGet：是否申请资源时对资源数量进行相应的改变*/
+/************************************************************************/
+bool PCB::applyForResource(bool isGet) {
+	int a = -1;
+	int b = -1;
+	theProcess->getResourceNeed(a, b);
+	//进行资源申请
+	if(ResourceManage::apply(a, b, isGet)) {
+		return true;
+	}
+	else {
+		return false;
+	}
 }
 
 MyProcess* PCB::getProcess() {

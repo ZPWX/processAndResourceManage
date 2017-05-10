@@ -33,6 +33,8 @@ public:
 	static bool addBlockQueue(PCB* pcb);
 	//添加进程进入就绪队列
 	static bool addReadyQueue(PCB* pcb);
+	//获取当前运行进程资源占用情况
+	static void getRunningResource(int& amountA, int& amountB);
 
 private:
 	//优先级队列
